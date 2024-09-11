@@ -7,9 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class PeriodicTableService {
-  // private apiUrl = 'elements.json';
-  private apiUrl = 'http://localhost:3000/elements' 
-  
+  private apiUrl = 'http://localhost:3000/elements';
 
   constructor(private http: HttpClient) {}
 

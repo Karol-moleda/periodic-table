@@ -7,7 +7,7 @@ import {
   Observable,
   of,
   Subscription,
-  switchMap
+  switchMap,
 } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
@@ -46,7 +46,11 @@ export class PeriodicTablePageComponent implements OnInit, OnDestroy {
 
   protected subscriptions = new Subscription();
 
-  constructor(private periodicTableService: PeriodicTableService, public dialog: MatDialog,protected cdr: ChangeDetectorRef,) {}
+  constructor(
+    private periodicTableService: PeriodicTableService,
+    public dialog: MatDialog,
+    protected cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit() {
     this.viewElements();
@@ -59,10 +63,15 @@ export class PeriodicTablePageComponent implements OnInit, OnDestroy {
 
   viewElements() {
     this.subscriptions.add(
-    this.periodicTableService.getElements().subscribe((elements) => {
-      this.elements = [...elements];
-    })
-  )
+      this.periodicTableService.getElements().subscribe({
+        next: (elements) => {
+          this.elements = [...elements];
+        },
+        error: (error) => {
+          console.error('Error during fetching elements:', error);
+        },
+      }),
+    );
   }
 
   searchElement() {
@@ -78,7 +87,9 @@ export class PeriodicTablePageComponent implements OnInit, OnDestroy {
       return of(this.elements);
     }
     return of(this.elements).pipe(
-      map((elements) => elements.filter((el: PeriodicTableElement) => this.matchesSearchTerm(el, searchTerm))),
+      map((elements) =>
+        elements.filter((el: PeriodicTableElement) => this.matchesSearchTerm(el, searchTerm)),
+      ),
     );
   }
 
@@ -94,28 +105,28 @@ export class PeriodicTablePageComponent implements OnInit, OnDestroy {
   openModal(element: PeriodicTableElement): void {
     const dialogRef = this.dialog.open(ModalForFilteringComponent, {
       width: '300px',
-      data: { ...element }
+      data: { ...element },
     });
-  
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const updatedElement = { ...result };
-        this.periodicTableService.updateElement(updatedElement).subscribe(
-          response => {
-            console.log('Odpowiedź serwera:', response);
-            this.elements = this.elements.map(item =>
-              item.position === updatedElement.position ? { ...response } : item
-            );
-            this.filteredElements$ = of(this.elements);
-          },
-          error => {
-            console.error('Błąd podczas aktualizacji:', error);
-          }
-        );
-      }
-    });
+
+    this.subscriptions.add(
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          const updatedElement = { ...result };
+          this.periodicTableService.updateElement(updatedElement).subscribe({
+            next: (response) => {
+              this.elements = this.elements.map((item) =>
+                item.position === updatedElement.position ? { ...response } : item,
+              );
+              this.filteredElements$ = of(this.elements);
+            },
+            error: (error) => {
+              console.error('Error during update:', error);
+            },
+          });
+        }
+      }),
+    );
   }
-  
 
   updateElement(updatedElement: any): void {
     this.elements = this.elements.map((el: any) =>
@@ -125,6 +136,6 @@ export class PeriodicTablePageComponent implements OnInit, OnDestroy {
 
   clearTable() {
     this.value = '';
-    this.filteredElements$ = of(this.elements)
+    this.filteredElements$ = of(this.elements);
   }
 }
