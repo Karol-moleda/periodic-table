@@ -1,0 +1,23 @@
+.mat-mdc-dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+button {
+  min-width: 80px;
+}
+
+button mat-icon {
+  vertical-align: middle;
+}
+
+button.save-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+button.close-button {
+  background-color: #f44336;
+  color: white;
+}
